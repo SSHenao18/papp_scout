@@ -85,7 +85,7 @@ class RecentPage extends StatelessWidget {
         title: Text('Recent'),
       ),
       body: Center(
-        child: Text('Recent Page'),
+        child: Text('No hay datos recientes'),
       ),
     );
   }
