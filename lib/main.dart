@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:papp_scout/scout.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(Adit());
 }
 
-class MyApp extends StatelessWidget {
+class Adit extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
