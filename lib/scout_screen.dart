@@ -10,12 +10,11 @@ class CameraScreen extends StatefulWidget {
 }
 
 class _CameraScreenState extends State<CameraScreen> {
-  CameraController? _controller;
+  CameraController? _cameraController;
   List<CameraDescription>? cameras;
   bool _isCameraInitialized = false;
   TextEditingController? _nameController;
   final HttpUploadService _httpUploadService = HttpUploadService();
-  String? httptext;
   double? latitude;
   double? longitude;
   String? locationtext;
@@ -30,9 +29,9 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _initializeCamera() async {
     cameras = await availableCameras();
     if (cameras != null && cameras!.isNotEmpty) {
-      _controller = CameraController(cameras![0], ResolutionPreset.high);
-      await _controller!.initialize();
-      await _controller!.setFocusMode(FocusMode.auto);
+      _cameraController = CameraController(cameras![0], ResolutionPreset.high);
+      await _cameraController!.initialize();
+      await _cameraController!.setFocusMode(FocusMode.auto);
       setState(() {
         _isCameraInitialized = true;
       });
@@ -41,7 +40,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _cameraController?.dispose();
     _nameController?.dispose();
     super.dispose();
   }
@@ -95,7 +94,7 @@ class _CameraScreenState extends State<CameraScreen> {
             if (_isCameraInitialized)
               AspectRatio(
                 aspectRatio: (11.0 / 16.0),
-                child: CameraPreview(_controller!),
+                child: CameraPreview(_cameraController!),
               )
             else
               Center(child: CircularProgressIndicator()),
@@ -110,9 +109,10 @@ class _CameraScreenState extends State<CameraScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                if (_controller != null && _controller!.value.isInitialized) {
+                if (_cameraController != null &&
+                    _cameraController!.value.isInitialized) {
                   try {
-                    XFile img = await _controller!.takePicture();
+                    XFile img = await _cameraController!.takePicture();
                     String imgpath = img.path;
                     Position position = await _determinePosition();
                     Scout scout = Scout(
@@ -129,9 +129,6 @@ class _CameraScreenState extends State<CameraScreen> {
                           content: Text(
                               "Picture taken and uploaded!\n Name: ${scout.name}\n Latitude: ${scout.latitude}\n Longitude: ${scout.longitude}\n")),
                     );
-                    setState(() {
-                      httptext = _nameController?.text;
-                    });
                   } catch (e) {
                     print(e);
                   }
