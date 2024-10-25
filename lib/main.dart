@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:papp_scout/scout.dart';
+import 'package:papp_scout/scout_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _requestPermissions();
   runApp(MyApp());
+}
+
+Future<void> _requestPermissions() async {
+  await [
+    Permission.camera,
+    Permission.storage,
+    Permission.location,
+  ].request();
 }
 
 class MyApp extends StatelessWidget {

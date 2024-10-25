@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+import 'package:papp_scout/common/scout.dart';
+import 'package:papp_scout/services/http_upload_service.dart';
 
 class CameraScreen extends StatefulWidget {
   @override
@@ -14,13 +13,18 @@ class _CameraScreenState extends State<CameraScreen> {
   CameraController? _controller;
   List<CameraDescription>? cameras;
   bool _isCameraInitialized = false;
+  TextEditingController? _nameController;
+  final HttpUploadService _httpUploadService = HttpUploadService();
   String? httptext;
+  double? latitude;
+  double? longitude;
   String? locationtext;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _nameController = TextEditingController();
   }
 
   Future<void> _initializeCamera() async {
@@ -38,6 +42,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void dispose() {
     _controller?.dispose();
+    _nameController?.dispose();
     super.dispose();
   }
 
@@ -85,46 +90,72 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
           children: [
             if (_isCameraInitialized)
               AspectRatio(
-                aspectRatio: (12.0 / 16.0),
+                aspectRatio: (11.0 / 16.0),
                 child: CameraPreview(_controller!),
               )
             else
               Center(child: CircularProgressIndicator()),
+            // SizedBox(height: 20),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: [
+            //     FutureBuilder<Position>(
+            //       future: _determinePosition(),
+            //       builder: (context, snapshot) {
+            //         locationtext = 'Unable to get location';
+            //         if (snapshot.connectionState == ConnectionState.waiting) {
+            //           return CircularProgressIndicator();
+            //         } else if (snapshot.hasError) {
+            //           locationtext = 'Error: ${snapshot.error}';
+            //         } else if (snapshot.hasData) {
+            //           final position = snapshot.data!;
+            //           locationtext =
+            //               'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
+            //           latitude = position.latitude;
+            //           longitude = position.longitude;
+            //         }
+            //         return Text(locationtext!);
+            //       },
+            //     ),
+            //   ],
+            // ),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FutureBuilder<Position>(
-                  future: _determinePosition(),
-                  builder: (context, snapshot) {
-                    locationtext = 'Unable to get location';
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
-                    } else if (snapshot.hasError) {
-                      locationtext = 'Error: ${snapshot.error}';
-                    } else if (snapshot.hasData) {
-                      final position = snapshot.data!;
-                      locationtext =
-                          'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
-                    }
-                    return Text(locationtext!);
-                  },
-                ),
-              ],
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: 'Enter name',
+                border: OutlineInputBorder(),
+              ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 if (_controller != null && _controller!.value.isInitialized) {
                   try {
-                    await _controller!.takePicture();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Picture taken!')),
+                    XFile img = await _controller!.takePicture();
+                    String imgpath = img.path;
+                    Position position = await _determinePosition();
+                    Scout scout = Scout(
+                      name: _nameController?.text ?? 'Unknown',
+                      latitude: position.latitude,
+                      longitude: position.longitude,
+                      image: imgpath,
                     );
+
+                    _httpUploadService.uploadScout(scout);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              "Picture taken and uploaded!\n Name: ${scout.name}\n Latitude: ${scout.latitude}\n Longitude: ${scout.longitude}\n")),
+                    );
+                    setState(() {
+                      httptext = _nameController?.text;
+                    });
                   } catch (e) {
                     print(e);
                   }
@@ -132,26 +163,22 @@ class _CameraScreenState extends State<CameraScreen> {
               },
               child: Text('Capture'),
             ),
-            SizedBox(height: 20),
-            Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(httptext ?? 'No data')),
-            ElevatedButton(
-                onPressed: () async {
-                  // Get data from xmlrpc
-                  final url =
-                      Uri.parse('http://127.0.0.1:8000/api/categorias/');
-                  // xml_rpc.call(url, 'version', []).then((result) {
-                  //   if (result['server_version'] is String) {
-                  //     httptext = result['server_version'];
-                  //   }
-                  http.get(url).then((response) {
-                    print("Got response");
-                    httptext = jsonDecode(response.body).toString();
-                    setState(() {});
-                  });
-                },
-                child: Text('Get data from xmlrpc'))
+            // SizedBox(height: 20),
+            // Padding(
+            //     padding: EdgeInsets.all(16.0),
+            //     child: Text("Last upload: {httptext ?? 'No data'}")),
+            // ElevatedButton(
+            //     onPressed: () async {
+            //       // Get data from xmlrpc
+            //       final url =
+            //           Uri.parse('http://54.149.184.248:8000/api/scouts/');
+            //       http.get(url).then((response) {
+            //         print("Got response");
+            //         httptext = jsonDecode(response.body).toString();
+            //         setState(() {});
+            //       });
+            //     },
+            //     child: Text('Get data from api'))
           ],
         ),
       ),
