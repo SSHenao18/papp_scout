@@ -99,30 +99,6 @@ class _CameraScreenState extends State<CameraScreen> {
               )
             else
               Center(child: CircularProgressIndicator()),
-            // SizedBox(height: 20),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     FutureBuilder<Position>(
-            //       future: _determinePosition(),
-            //       builder: (context, snapshot) {
-            //         locationtext = 'Unable to get location';
-            //         if (snapshot.connectionState == ConnectionState.waiting) {
-            //           return CircularProgressIndicator();
-            //         } else if (snapshot.hasError) {
-            //           locationtext = 'Error: ${snapshot.error}';
-            //         } else if (snapshot.hasData) {
-            //           final position = snapshot.data!;
-            //           locationtext =
-            //               'Latitude: ${position.latitude}, Longitude: ${position.longitude}';
-            //           latitude = position.latitude;
-            //           longitude = position.longitude;
-            //         }
-            //         return Text(locationtext!);
-            //       },
-            //     ),
-            //   ],
-            // ),
             SizedBox(height: 20),
             TextField(
               controller: _nameController,
@@ -163,22 +139,6 @@ class _CameraScreenState extends State<CameraScreen> {
               },
               child: Text('Capture'),
             ),
-            // SizedBox(height: 20),
-            // Padding(
-            //     padding: EdgeInsets.all(16.0),
-            //     child: Text("Last upload: {httptext ?? 'No data'}")),
-            // ElevatedButton(
-            //     onPressed: () async {
-            //       // Get data from xmlrpc
-            //       final url =
-            //           Uri.parse('http://54.149.184.248:8000/api/scouts/');
-            //       http.get(url).then((response) {
-            //         print("Got response");
-            //         httptext = jsonDecode(response.body).toString();
-            //         setState(() {});
-            //       });
-            //     },
-            //     child: Text('Get data from api'))
           ],
         ),
       ),
